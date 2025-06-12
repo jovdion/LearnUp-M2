@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnUp - Dashboard</title>
+    <style>
+        body { font-family: 'Google Sans', Arial, sans-serif; background: #f5f5f5; margin: 0; }
+        .container { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 270px;
+            background: #fff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            padding: 0 0 1rem 0;
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 2rem 2rem 1.2rem 2rem;
+        }
+        .sidebar-header img {
+            width: 38px;
+            height: 38px;
+        }
+        .sidebar-header span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3c4043;
+        }
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            margin-top: 1.5rem;
+        }
+        .sidebar-menu button {
+            background: none;
+            border: none;
+            text-align: left;
+            padding: 0.9rem 2rem;
+            font-size: 1.08rem;
+            color: #3c4043;
+            border-radius: 0 24px 24px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: background 0.2s, color 0.2s;
+        }
+        .sidebar-menu button.active, .sidebar-menu button:hover {
+            background: #e3f0fc;
+            color: #1967d2;
+        }
+        .sidebar-menu .icon {
+            font-size: 1.3rem;
+            width: 24px;
+            text-align: center;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        header {
+            background: #fff;
+            color: #3c4043;
+            padding: 1.2rem 2.5rem 1.2rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            border-bottom: 1px solid #e0e0e0;
+            gap: 1.5rem;
+        }
+        .profile-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #fbbc04;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        #app { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .main-area { padding: 3.5rem 6vw; }
+        .card-list { display: flex; flex-wrap: wrap; gap: 3.5rem 4vw; justify-content: flex-start; }
+        .card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px #0002; padding: 2rem 1.5rem 1.5rem 1.5rem; min-width: 340px; max-width: 380px; flex: 1 1 270px; display: flex; flex-direction: column; gap: 0.7rem; border-top: 6px solid #4285f4; transition: box-shadow 0.2s; position: relative; }
+        .card:hover { box-shadow: 0 6px 24px #0003; }
+        .card h3 { margin: 0 0 0.5rem 0; font-size: 1.2rem; color: #4285f4; font-weight: 600; }
+        .card p { margin: 0; color: #444; font-size: 1rem; }
+        .card .card-footer { margin-top: auto; display: flex; gap: 0.5rem; align-items: center; }
+        .card .profile-circle { width: 32px; height: 32px; font-size: 1rem; background: #e3eafc; color: #4285f4; }
+        .kelas-header {
+            background: linear-gradient(90deg, #7baaf7 60%, #e3eafc 100%);
+            border-radius: 18px;
+            margin-bottom: 2rem;
+            padding: 2.5rem 2rem 2rem 2.5rem;
+            color: #fff;
+            position: relative;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .kelas-header .kelas-title { font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+        .kelas-header .kelas-desc { color: #e3eafc; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .kelas-header .kelas-kode { color: #e3eafc; font-size: 1rem; }
+        .kelas-tabs { display: flex; gap: 2.5rem; border-bottom: 2px solid #e3eafc; margin-bottom: 2rem; }
+        .kelas-tab { background: none; border: none; font-size: 1.1rem; font-weight: 500; color: #5f6368; padding: 0.7rem 0; cursor: pointer; border-bottom: 3px solid transparent; transition: color 0.2s, border 0.2s; }
+        .kelas-tab.active, .kelas-tab:hover { color: #1967d2; border-bottom: 3px solid #1967d2; }
+        .kelas-content { padding: 1.5rem 0; }
+        @media (max-width: 900px) { .container { flex-direction: column; } .sidebar { width: 100vw; flex-direction: row; border-right: none; border-bottom: 1px solid #e0e0e0; } .sidebar-header { padding: 1rem; } .sidebar-menu { flex-direction: row; gap: 0.5rem; margin-top: 0; } .sidebar-menu button { padding: 0.7rem 1rem; border-radius: 24px; font-size: 1rem; } }
+        @media (max-width: 700px) { .main-area { padding: 1rem 2vw; } .card-list { gap: 1rem; } .card { min-width: 90vw; max-width: 98vw; padding: 1.2rem 1rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <header>
+                <div style="display:flex;align-items:center;gap:0.7rem;">
+                    <img src="https://ssl.gstatic.com/classroom/ic_product_classroom_48.png" alt="Classroom Logo" style="width:32px;height:32px;">
+                    <span style="font-size:1.3rem;font-weight:700;color:#4285f4;">LearnUp</span>
+                </div>
+                <div style="margin-left:auto;"></div>
+                <div class="profile-circle" id="profile-circle">J</div>
+                <button id="logout-btn" style="display:none;margin-left:1rem;background:#e3eafc;color:#4285f4;border:none;padding:0.5rem 1.2rem;border-radius:20px;cursor:pointer;font-weight:500;">Logout</button>
+            </header>
+            <div id="app"></div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 

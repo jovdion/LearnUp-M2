@@ -1,0 +1,137 @@
+### USERS
+GET http://localhost:3002/users
+
+GET http://localhost:3002/users/1
+
+POST http://localhost:3002/users
+Content-Type: application/json
+
+{
+  "name": "Budi",
+  "email": "budi@example.com",
+  "password": "rahasia123"
+}
+
+PATCH http://localhost:3002/users/1
+Content-Type: application/json
+
+{
+  "name": "Budi Update"
+}
+
+DELETE http://localhost:3002/users/1
+
+### KELAS
+GET http://localhost:3002/kelas
+
+GET http://localhost:3002/kelas/1
+
+POST http://localhost:3002/kelas
+Content-Type: application/json
+
+{
+  "nama": "Kelas A",
+  "kode_kelas": "A001",
+  "id_pembuat": 1
+}
+
+PATCH http://localhost:3002/kelas/1
+Content-Type: application/json
+
+{
+  "nama": "Kelas A Update"
+}
+
+DELETE http://localhost:3002/kelas/1
+
+### MATERIS
+GET http://localhost:3002/materis
+
+GET http://localhost:3002/materis/1
+
+POST http://localhost:3002/materis
+Content-Type: application/json
+
+{
+  "judul": "Materi 1",
+  "isi": "Isi materi 1",
+  "id_kelas": 1
+}
+
+PATCH http://localhost:3002/materis/1
+Content-Type: application/json
+
+{
+  "judul": "Materi 1 Update"
+}
+
+DELETE http://localhost:3002/materis/1
+
+### TUGAS
+GET http://localhost:3002/tugas
+
+GET http://localhost:3002/tugas/1
+
+POST http://localhost:3002/tugas
+Content-Type: application/json
+
+{
+  "judul": "Tugas 1",
+  "deskripsi": "Deskripsi tugas 1",
+  "id_kelas": 1
+}
+
+PATCH http://localhost:3002/tugas/1
+Content-Type: application/json
+
+{
+  "judul": "Tugas 1 Update"
+}
+
+DELETE http://localhost:3002/tugas/1
+
+### SUBMISSIONS
+GET http://localhost:3002/submissions
+
+GET http://localhost:3002/submissions/1
+
+POST http://localhost:3002/submissions
+Content-Type: application/json
+
+{
+  "id_user": 1,
+  "id_tugas": 1,
+  "jawaban": "Jawaban tugas"
+}
+
+PATCH http://localhost:3002/submissions/1
+Content-Type: application/json
+
+{
+  "jawaban": "Jawaban update"
+}
+
+DELETE http://localhost:3002/submissions/1
+
+### USER_KELAS
+GET http://localhost:3002/user_kelas
+
+GET http://localhost:3002/user_kelas/1/1
+
+POST http://localhost:3002/user_kelas
+Content-Type: application/json
+
+{
+  "id_user": 1,
+  "id_kelas": 1
+}
+
+PATCH http://localhost:3002/user_kelas/1/1
+Content-Type: application/json
+
+{
+  "id_user": 1,
+  "id_kelas": 1
+}
+
+DELETE http://localhost:3002/user_kelas/1/1 
