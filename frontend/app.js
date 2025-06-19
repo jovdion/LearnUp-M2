@@ -18,6 +18,7 @@ let materiData = [];
 let tugasData = [];
 let user = JSON.parse(localStorage.getItem('user')) || null;
 let userKelasData = [];
+let submissionData = [];
 
 async function fetchKelas() {
     const res = await fetch(`${BASE_URL}/kelas`);
@@ -38,6 +39,11 @@ async function fetchUserKelas() {
     if (!user) return;
     const res = await fetch(`${BASE_URL}/user_kelas`);
     userKelasData = await res.json();
+}
+
+async function fetchSubmissions() {
+    const res = await fetch(`${BASE_URL}/submissions`);
+    submissionData = await res.json();
 }
 
 async function isTeacherInKelas(userId, kelasId) {
@@ -668,16 +674,29 @@ async function renderTugasList(kelasId) {
         
         html += `
             <ul style="padding-left:1.2rem;">
-                ${tugasKelas.length === 0 ? '<li style=\'color:#888\'>Belum ada tugas</li>' : tugasKelas.map(t => `
+                ${tugasKelas.length === 0 ? '<li style=\'color:#888\'>Belum ada tugas</li>' : tugasKelas.map(t => {
+                    const submission = submissionData.find(s => s.tugas_id === t.id && s.user_id === user.id);
+                    return `
                     <li style='margin-bottom:0.7rem;position:relative;padding-right:110px;'>
                         <b>${t.judul}</b><br><span style='color:#555;font-size:0.97rem;'>${t.deskripsi || ''}</span>
                         ${isTeacher ? `
                             <div style='position:absolute;right:0;top:0;display:flex;gap:0.3rem;'>
+                                <button data-id="${t.id}" class="view-submissions-btn" style="background:#fff;color:#4285f4;border:1px solid #4285f4;padding:0.2rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.95em;">View Submissions</button>
                                 <button data-id="${t.id}" class="edit-tugas-btn" style="background:#fff;color:#4285f4;border:1px solid #4285f4;padding:0.2rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.95em;">Edit</button>
                                 <button data-id="${t.id}" class="hapus-tugas-btn" style="background:#fff;color:#d32f2f;border:1px solid #d32f2f;padding:0.2rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.95em;">Delete</button>
                             </div>
-                        ` : ''}
-                    </li>`).join('')}
+                        ` : `
+                            <div style='position:absolute;right:0;top:0;display:flex;gap:0.3rem;'>
+                                ${submission ? `
+                                    <span style="color:#4caf50;font-size:0.95em;">Submitted</span>
+                                    ${submission.nilai ? `<span style="color:#4285f4;font-size:0.95em;">Score: ${submission.nilai}</span>` : ''}
+                                ` : `
+                                    <button data-id="${t.id}" class="submit-tugas-btn" style="background:#4285f4;color:#fff;border:none;padding:0.2rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.95em;">Submit</button>
+                                `}
+                            </div>
+                        `}
+                    </li>`;
+                }).join('')}
             </ul>
         </div>`;
         
@@ -696,6 +715,14 @@ async function renderTugasList(kelasId) {
                 await fetchTugas();
                 renderTugasList(kelasId);
             };
+
+            tugasContent.querySelectorAll('.view-submissions-btn').forEach(btn => {
+                btn.onclick = function(e) {
+                    e.stopPropagation();
+                    const tugasId = btn.getAttribute('data-id');
+                    renderSubmissionsList(tugasId);
+                };
+            });
 
             tugasContent.querySelectorAll('.hapus-tugas-btn').forEach(btn => {
                 btn.onclick = async function(e) {
@@ -742,6 +769,14 @@ async function renderTugasList(kelasId) {
                     };
                 };
             });
+        } else {
+            tugasContent.querySelectorAll('.submit-tugas-btn').forEach(btn => {
+                btn.onclick = function(e) {
+                    e.stopPropagation();
+                    const tugasId = btn.getAttribute('data-id');
+                    showSubmitForm(tugasId);
+                };
+            });
         }
     } catch (err) {
         tugasContent.innerHTML = `
@@ -750,6 +785,213 @@ async function renderTugasList(kelasId) {
             </div>
         `;
     }
+}
+
+function showSubmitForm(tugasId) {
+    const tugas = tugasData.find(t => t.id == tugasId);
+    if (!tugas) return;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px;">
+            <h3 style="margin-top: 0;">Submit Tugas: ${tugas.judul}</h3>
+            <form id="submit-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="file" id="file-input" required style="padding: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" class="cancel-submit" style="background: #fff; color: #666; border: 1px solid #ccc; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Cancel</button>
+                    <button type="submit" style="background: #4285f4; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Submit</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.cancel-submit').onclick = () => {
+        document.body.removeChild(modal);
+    };
+
+    modal.querySelector('#submit-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('tugas_id', tugasId);
+        formData.append('user_id', user.id);
+
+        try {
+            const response = await fetch(`${BASE_URL}/submissions`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+            
+            await fetchSubmissions();
+            document.body.removeChild(modal);
+            renderTugasList(tugas.kelas_id);
+        } catch (err) {
+            console.error('Upload error:', err);
+            alert('Failed to submit task: ' + err.message);
+        }
+    };
+}
+
+async function renderSubmissionsList(tugasId) {
+    const tugas = tugasData.find(t => t.id == tugasId);
+    if (!tugas) return;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    `;
+
+    const submissions = submissionData.filter(s => s.tugas_id == tugasId);
+    console.log('Submissions:', submissions);
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+            <h3 style="margin-top: 0;">Submissions for: ${tugas.judul}</h3>
+            <div style="margin-top: 1rem;">
+                ${submissions.length === 0 ? '<p style="color: #666;">No submissions yet</p>' : `
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <th style="text-align: left; padding: 0.5rem;">Student</th>
+                                <th style="text-align: left; padding: 0.5rem;">File</th>
+                                <th style="text-align: left; padding: 0.5rem;">Score</th>
+                                <th style="text-align: left; padding: 0.5rem;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${submissions.map(s => {
+                                const fileUrl = `${BASE_URL}/uploads/${s.file_attachment}`;
+                                console.log('File URL:', fileUrl);
+                                return `
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 0.5rem;">${s.user_id}</td>
+                                    <td style="padding: 0.5rem;">
+                                        <a href="${fileUrl}" target="_blank" style="color: #4285f4;" onclick="console.log('Opening file:', '${fileUrl}')">View File</a>
+                                    </td>
+                                    <td style="padding: 0.5rem;">
+                                        ${s.nilai ? s.nilai : '-'}
+                                    </td>
+                                    <td style="padding: 0.5rem;">
+                                        <button class="grade-btn" data-id="${s.id}" style="background: #4285f4; color: #fff; border: none; padding: 0.3rem 0.7rem; border-radius: 4px; cursor: pointer;">Grade</button>
+                                    </td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `}
+            </div>
+            <div style="margin-top: 1rem; text-align: right;">
+                <button class="close-modal" style="background: #fff; color: #666; border: 1px solid #ccc; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.close-modal').onclick = () => {
+        document.body.removeChild(modal);
+    };
+
+    modal.querySelectorAll('.grade-btn').forEach(btn => {
+        btn.onclick = function() {
+            const submissionId = btn.getAttribute('data-id');
+            showGradeForm(submissionId);
+        };
+    });
+}
+
+function showGradeForm(submissionId) {
+    const submission = submissionData.find(s => s.id == submissionId);
+    if (!submission) return;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px;">
+            <h3 style="margin-top: 0;">Grade Submission</h3>
+            <form id="grade-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem;">Score (0-100)</label>
+                    <input type="number" id="score-input" min="0" max="100" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" class="cancel-grade" style="background: #fff; color: #666; border: 1px solid #ccc; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Cancel</button>
+                    <button type="submit" style="background: #4285f4; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">Save Grade</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.cancel-grade').onclick = () => {
+        document.body.removeChild(modal);
+    };
+
+    modal.querySelector('#grade-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const score = document.getElementById('score-input').value;
+
+        try {
+            await fetch(`${BASE_URL}/submissions/${submissionId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nilai: parseInt(score) })
+            });
+            await fetchSubmissions();
+            document.body.removeChild(modal);
+            const tugas = tugasData.find(t => t.id == submission.tugas_id);
+            if (tugas) {
+                renderSubmissionsList(tugas.id);
+            }
+        } catch (err) {
+            alert('Failed to save grade');
+        }
+    };
 }
 
 async function createKelas() {
@@ -787,5 +1029,6 @@ async function createKelas() {
     await fetchMateri();
     await fetchTugas();
     await fetchUserKelas();
+    await fetchSubmissions();
     renderApp();
 })(); 
